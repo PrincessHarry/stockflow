@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StockFlow{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6B21A8',
+                        accent: '#F59E0B',
+                        background: '#F9FAFB',
+                        card: '#E5E7EB',
+                        text: '#1F2937',
+                        success: '#10B981',
+                        error: '#F43F5E',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Heroicons -->
+    <script src="https://unpkg.com/@heroicons/v2/24/outline/esm/index.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        [x-cloak] { display: none !important; }
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: flex; }
+        .htmx-request.htmx-indicator { display: flex; }
+        
+        /* Mobile menu animation */
+        .mobile-menu-enter {
+            transform: translateX(-100%);
+        }
+        .mobile-menu-enter-active {
+            transform: translateX(0);
+            transition: transform 300ms ease-in-out;
+        }
+        .mobile-menu-exit {
+            transform: translateX(0);
+        }
+        .mobile-menu-exit-active {
+            transform: translateX(-100%);
+            transition: transform 300ms ease-in-out;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-background min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white text-text shadow-lg" x-data="{ mobileMenuOpen: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'stock:dashboard' %}" class="text-xl font-bold text-primary flex items-center">
+                            <svg class="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            StockFlow
+                        </a>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
+                        <a href="{% url 'stock:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}border-accent text-primary{% else %}border-transparent text-text/60 hover:text-primary hover:border-gray-300{% endif %} inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Dashboard
+                        </a>
+                        <div class="relative group">
+                            <button class="{% if 'product' in request.resolver_match.url_name %}border-accent text-primary{% else %}border-transparent text-text/60 hover:text-primary hover:border-gray-300{% endif %} inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium">
+                                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                Inventory
+                                <svg class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div class="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                                <div class="py-1">
+                                    <a href="{% url 'stock:product_list' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Products</a>
+                                    <a href="{% url 'stock:category_list' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Categories</a>
+                                    <a href="{% url 'stock:stock_alerts' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Stock Alerts</a>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{% url 'stock:supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}border-accent text-primary{% else %}border-transparent text-text/60 hover:text-primary hover:border-gray-300{% endif %} inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium">
+                            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Suppliers
+                        </a>
+                        <div class="relative group">
+                            <button class="{% if 'sale' in request.resolver_match.url_name %}border-accent text-primary{% else %}border-transparent text-text/60 hover:text-primary hover:border-gray-300{% endif %} inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium">
+                                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Sales
+                                <svg class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div class="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                                <div class="py-1">
+                                    <a href="{% url 'stock:sale_list' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">All Sales</a>
+                                    <a href="{% url 'stock:new_sale' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">New Sale</a>
+                                    <a href="{% url 'stock:sales_analytics' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Analytics</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% if user.is_staff %}
+                        <div class="relative group">
+                            <button class="{% if 'report' in request.resolver_match.url_name %}border-accent text-primary{% else %}border-transparent text-text/60 hover:text-primary hover:border-gray-300{% endif %} inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium">
+                                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Reports
+                                <svg class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div class="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                                <div class="py-1">
+                                    <a href="{% url 'stock:reports' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Overview</a>
+                                    <a href="{% url 'stock:reports' %}?report_type=inventory" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Inventory</a>
+                                    <a href="{% url 'stock:reports' %}?report_type=sales" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Sales</a>
+                                    <a href="{% url 'stock:reports' %}?report_type=supplier" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100">Suppliers</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    {% if user.is_authenticated %}
+                    <button class="p-1 rounded-full text-text/60 hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <span class="sr-only">View notifications</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    <div class="ml-3 relative">
+                        <div>
+                            <button type="button" class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                <span class="sr-only">Open user menu</span>
+                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-accent">
+                                    <span class="text-sm font-medium leading-none text-white">{{ request.user.username|first|upper }}</span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1" id="user-menu">
+                            <a href="{% url 'stock:profile' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100" role="menuitem">Your Profile</a>
+                            <a href="{% url 'stock:settings' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100" role="menuitem">Settings</a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="{% url 'stock:logout' %}" class="block px-4 py-2 text-sm text-text/60 hover:bg-gray-100" role="menuitem">Sign out</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'stock:login' %}" class="text-sm text-primary hover:text-accent">Login</a>
+                        <a href="{% url 'stock:register' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
+                            Get Started
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Mobile menu button -->
+                <div class="flex items-center sm:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-text/60 hover:text-primary hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" x-show="!mobileMenuOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="h-6 w-6" x-show="mobileMenuOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="sm:hidden" x-show="mobileMenuOpen" x-transition:enter="mobile-menu-enter" x-transition:enter-start="mobile-menu-enter" x-transition:enter-end="mobile-menu-enter-active" x-transition:leave="mobile-menu-exit" x-transition:leave-start="mobile-menu-exit" x-transition:leave-end="mobile-menu-exit-active">
+            <div class="pt-2 pb-3 space-y-1">
+                {% if user.is_authenticated %}
+                <a href="{% url 'stock:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Dashboard
+                </a>
+                <a href="{% url 'stock:product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Products
+                </a>
+                <a href="{% url 'stock:category_list' %}" class="{% if request.resolver_match.url_name == 'category_list' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Categories
+                </a>
+                <a href="{% url 'stock:supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Suppliers
+                </a>
+                <a href="{% url 'stock:sale_list' %}" class="{% if request.resolver_match.url_name == 'sale_list' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Sales
+                </a>
+                {% if user.is_staff %}
+                <a href="{% url 'stock:reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}bg-accent/10 border-accent text-primary{% else %}border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Reports
+                </a>
+                {% endif %}
+                {% else %}
+                <a href="{% url 'stock:login' %}" class="border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Login
+                </a>
+                <a href="{% url 'stock:register' %}" class="border-transparent text-text/60 hover:bg-gray-50 hover:border-gray-300 hover:text-primary block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Get Started
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-4 rounded-md {% if message.tags == 'success' %}bg-success text-white{% elif message.tags == 'error' %}bg-error text-white{% else %}bg-card text-text{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-card mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-text text-sm">
+                &copy; {% now "Y" %} StockFlow. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Notifications -->
+    {% include 'stock/partials/notifications.html' %}
+
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/notifications.js' %}"></script>
+    <script>
+        // User menu dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+            
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('hidden');
+                });
+
+                // Close the menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

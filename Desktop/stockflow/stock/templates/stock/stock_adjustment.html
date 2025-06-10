@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Adjust Stock - StockFlow{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">Adjust Stock</h1>
+            <p class="mt-2 text-text/60">
+                Add or remove stock, mark items as damaged, or process returns.
+            </p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Product -->
+                <div>
+                    <label for="{{ form.product.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Product
+                    </label>
+                    <select name="{{ form.product.name }}" id="{{ form.product.id_for_label }}"
+                        class="form-select {% if form.product.errors %}border-error{% endif %}">
+                        <option value="">Select a product</option>
+                        {% for product in form.product.field.queryset %}
+                        <option value="{{ product.id }}" {% if form.product.value == product.id %}selected{% endif %}>
+                            {{ product.name }} (Current Stock: {{ product.quantity }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.product.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.product.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Action -->
+                <div>
+                    <label for="{{ form.action.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Action
+                    </label>
+                    <select name="{{ form.action.name }}" id="{{ form.action.id_for_label }}"
+                        class="form-select {% if form.action.errors %}border-error{% endif %}">
+                        {% for value, label in form.action.field.choices %}
+                        <option value="{{ value }}" {% if form.action.value == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.action.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.action.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                    <label for="{{ form.quantity.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Quantity
+                    </label>
+                    <input type="number" name="{{ form.quantity.name }}" id="{{ form.quantity.id_for_label }}"
+                        value="{{ form.quantity.value|default:'' }}"
+                        class="form-input {% if form.quantity.errors %}border-error{% endif %}"
+                        min="1" placeholder="Enter quantity">
+                    {% if form.quantity.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.quantity.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Notes
+                    </label>
+                    <textarea name="{{ form.notes.name }}" id="{{ form.notes.id_for_label }}"
+                        class="form-textarea {% if form.notes.errors %}border-error{% endif %}"
+                        rows="3" placeholder="Enter any additional notes">{{ form.notes.value|default:'' }}</textarea>
+                    {% if form.notes.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.notes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{% url 'stock_history' %}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">Adjust Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

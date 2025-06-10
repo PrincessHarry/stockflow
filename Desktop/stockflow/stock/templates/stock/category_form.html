@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Category - StockFlow{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Category
+            </h1>
+            <p class="text-text/60">Fill in the details below to {% if form.instance.pk %}update{% else %}create{% endif %} a category.</p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Name -->
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">Category Name</label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}"
+                        value="{{ form.name.value|default:'' }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.name.errors %}border-error ring-error{% endif %}"
+                        placeholder="Enter category name">
+                    {% if form.name.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">Description</label>
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.description.errors %}border-error ring-error{% endif %}"
+                        rows="3" placeholder="Enter category description">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-4">
+                    <a href="{% url 'stock:category_list' %}" class="px-4 py-2 text-sm font-medium text-text/60 hover:text-text bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+                        {% if form.instance.pk %}Update{% else %}Create{% endif %} Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
