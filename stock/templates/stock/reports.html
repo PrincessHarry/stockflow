@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - StockFlow{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">Reports</h1>
+            <p class="mt-2 text-text/60">
+                Generate and download various reports for your inventory and sales data.
+            </p>
+        </div>
+
+        <!-- Report Types -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for report in report_types %}
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 class="text-lg font-semibold text-text mb-2">{{ report.name }}</h2>
+                <p class="text-text/60 mb-4">{{ report.description }}</p>
+                
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="report_type" value="{{ report.id }}">
+                    
+                    {% if report.id == 'sales' %}
+                    <!-- Date Range for Sales Report -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-text/60 mb-1">
+                                Start Date
+                            </label>
+                            <input type="date" name="start_date" class="form-input w-full"
+                                value="{{ today|date:'Y-m-d'|add:'-30' }}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-text/60 mb-1">
+                                End Date
+                            </label>
+                            <input type="date" name="end_date" class="form-input w-full"
+                                value="{{ today|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Format Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-text/60 mb-1">
+                            Format
+                        </label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="format" value="pdf" checked
+                                    class="form-radio text-primary">
+                                <span class="ml-2 text-text">PDF</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="format" value="csv"
+                                    class="form-radio text-primary">
+                                <span class="ml-2 text-text">CSV</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button type="submit" class="btn-primary w-full">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Generate Report
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Report Information -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 class="text-lg font-semibold text-text mb-4">About Reports</h2>
+            <div class="prose prose-sm text-text/60">
+                <p>Generate detailed reports to analyze your business performance:</p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>Sales Report:</strong> View sales data for a specific date range, including total sales, revenue, and average sale value.</li>
+                    <li><strong>Low Stock Report:</strong> Get a list of all products that are below their reorder level, helping you maintain optimal inventory levels.</li>
+                    <li><strong>Inventory Value Report:</strong> Calculate the total value of your inventory by category, providing insights into your stock investment.</li>
+                </ul>
+                <p class="mt-4">Reports are available in both PDF and CSV formats. PDF reports are formatted for easy reading and printing, while CSV files can be opened in spreadsheet software for further analysis.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

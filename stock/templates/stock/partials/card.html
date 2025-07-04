@@ -1,0 +1,22 @@
+{% comment %}
+Usage:
+{% include 'stock/partials/card.html' with title="Card Title" subtitle="Optional subtitle" %}
+    Card content goes here
+{% endinclude %}
+{% endcomment %}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    {% if title or subtitle %}
+    <div class="px-6 py-4 border-b border-gray-100">
+        {% if title %}
+        <h3 class="text-lg font-semibold text-text">{{ title }}</h3>
+        {% endif %}
+        {% if subtitle %}
+        <p class="mt-1 text-sm text-text/60">{{ subtitle }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    <div class="p-6">
+        {% block card_content %}{% endblock %}
+    </div>
+</div> 

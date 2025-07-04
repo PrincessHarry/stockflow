@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StockFlow{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #6B7280;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --text: #1F2937;
+            --background: #F3F4F6;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+        }
+        
+        .btn-primary {
+            @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors;
+        }
+        
+        .btn-secondary {
+            @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors;
+        }
+        
+        .btn-success {
+            @apply bg-success text-white px-4 py-2 rounded-lg hover:bg-success/90 transition-colors;
+        }
+        
+        .btn-danger {
+            @apply bg-danger text-white px-4 py-2 rounded-lg hover:bg-danger/90 transition-colors;
+        }
+        
+        .btn-warning {
+            @apply bg-warning text-white px-4 py-2 rounded-lg hover:bg-warning/90 transition-colors;
+        }
+        
+        .btn-info {
+            @apply bg-info text-white px-4 py-2 rounded-lg hover:bg-info/90 transition-colors;
+        }
+        
+        .form-input {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50;
+        }
+        
+        .form-select {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50;
+        }
+        
+        .form-label {
+            @apply block text-sm font-medium text-text/60 mb-1;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'stock:dashboard' %}" class="text-xl font-bold text-primary">StockFlow</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'stock:profile' %}" class="text-text/60 hover:text-text">
+                            <i class="fas fa-user mr-2"></i>{{ user.username }}
+                        </a>
+                        <a href="{% url 'stock:logout' %}" class="text-text/60 hover:text-text">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </a>
+                    {% else %}
+                        <a href="{% url 'stock:login' %}" class="text-text/60 hover:text-text">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
+                        <a href="{% url 'stock:register' %}" class="text-text/60 hover:text-text">
+                            <i class="fas fa-user-plus mr-2"></i>Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="flex">
+        {% if user.is_authenticated %}
+        <!-- Sidebar for authenticated users -->
+        <aside class="w-64 bg-white shadow-lg h-screen sticky top-0">
+            <div class="p-4">
+                <nav class="space-y-2">
+                    <a href="{% url 'stock:dashboard' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'stock:product_list' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-box mr-2"></i>Products
+                    </a>
+                    <a href="{% url 'stock:category_list' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-tags mr-2"></i>Categories
+                    </a>
+                    <a href="{% url 'stock:supplier_list' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-truck mr-2"></i>Suppliers
+                    </a>
+                    <a href="{% url 'stock:sale_list' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>Sales
+                    </a>
+                    <a href="{% url 'stock:stock_history' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-history mr-2"></i>Stock History
+                    </a>
+                    <a href="{% url 'stock:reports' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-chart-bar mr-2"></i>Reports
+                    </a>
+                    <a href="{% url 'stock:settings' %}" class="block px-4 py-2 text-text/60 hover:bg-primary/10 hover:text-primary rounded-lg">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </a>
+                </nav>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="fixed bottom-4 right-4 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-2 rounded-lg shadow-lg {% if message.tags == 'success' %}bg-success text-white{% elif message.tags == 'error' %}bg-danger text-white{% elif message.tags == 'warning' %}bg-warning text-white{% elif message.tags == 'info' %}bg-info text-white{% else %}bg-secondary text-white{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

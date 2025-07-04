@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if form.instance.pk %}Edit{% else %}Add{% endif %} Supplier - StockFlow
+{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Supplier
+            </h1>
+            <p class="mt-2 text-text/60">
+                {% if form.instance.pk %}
+                Update the supplier's information below.
+                {% else %}
+                Fill in the supplier's details to add them to the system.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Name -->
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Name
+                    </label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}"
+                        value="{{ form.name.value|default:'' }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.name.errors %}border-error ring-error{% endif %}"
+                        placeholder="Enter supplier name">
+                    {% if form.name.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Person -->
+                <div>
+                    <label for="{{ form.contact_person.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Contact Person
+                    </label>
+                    <input type="text" name="{{ form.contact_person.name }}" id="{{ form.contact_person.id_for_label }}"
+                        value="{{ form.contact_person.value|default:'' }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.contact_person.errors %}border-error ring-error{% endif %}"
+                        placeholder="Enter contact person's name">
+                    {% if form.contact_person.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.contact_person.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Phone
+                    </label>
+                    <input type="tel" name="{{ form.phone.name }}" id="{{ form.phone.id_for_label }}"
+                        value="{{ form.phone.value|default:'' }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.phone.errors %}border-error ring-error{% endif %}"
+                        placeholder="Enter phone number">
+                    {% if form.phone.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Email
+                    </label>
+                    <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}"
+                        value="{{ form.email.value|default:'' }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.email.errors %}border-error ring-error{% endif %}"
+                        placeholder="Enter email address">
+                    {% if form.email.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Address -->
+                <div>
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+                        Address
+                    </label>
+                    <textarea name="{{ form.address.name }}" id="{{ form.address.id_for_label }}"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if form.address.errors %}border-error ring-error{% endif %}"
+                        rows="3" placeholder="Enter supplier address">{{ form.address.value|default:'' }}</textarea>
+                    {% if form.address.errors %}
+                    <p class="mt-1 text-sm text-error">{{ form.address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-4">
+                    <a href="{% url 'stock:supplier_list' %}" class="px-4 py-2 text-sm font-medium text-text/60 hover:text-text bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+                        {% if form.instance.pk %}Update{% else %}Add{% endif %} Supplier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

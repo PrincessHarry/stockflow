@@ -1,0 +1,147 @@
+{% extends 'stock/base.html' %}
+{% load static %}
+
+{% block title %}Sales Analytics - StockFlow{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-text">Sales Analytics</h1>
+        <div class="flex gap-4">
+            <button class="btn-primary" onclick="exportData('pdf')">
+                <i class="fas fa-file-pdf mr-2"></i>Export PDF
+            </button>
+            <button class="btn-secondary" onclick="exportData('csv')">
+                <i class="fas fa-file-csv mr-2"></i>Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-text/60 mb-2">Total Sales</h3>
+            <p class="text-3xl font-bold text-primary">{{ total_sales }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-text/60 mb-2">Total Revenue</h3>
+            <p class="text-3xl font-bold text-primary">₦{{ total_revenue|floatformat:2 }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-text/60 mb-2">Average Sale Value</h3>
+            <p class="text-3xl font-bold text-primary">₦{{ avg_sale_value|floatformat:2 }}</p>
+        </div>
+    </div>
+
+    <!-- Sales Chart -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-bold text-text mb-4">Daily Sales</h2>
+        <canvas id="salesChart" height="100"></canvas>
+    </div>
+
+    <!-- Top Products and Categories -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Top Products -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-text mb-4">Top Selling Products</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left text-sm font-medium text-text/60">Product</th>
+                            <th class="px-4 py-2 text-right text-sm font-medium text-text/60">Quantity</th>
+                            <th class="px-4 py-2 text-right text-sm font-medium text-text/60">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in top_products %}
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ product.product__name }}</td>
+                            <td class="px-4 py-2 text-right">{{ product.total_quantity }}</td>
+                            <td class="px-4 py-2 text-right">₦{{ product.total_revenue|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sales by Category -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-text mb-4">Sales by Category</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left text-sm font-medium text-text/60">Category</th>
+                            <th class="px-4 py-2 text-right text-sm font-medium text-text/60">Quantity</th>
+                            <th class="px-4 py-2 text-right text-sm font-medium text-text/60">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in sales_by_category %}
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ category.product__category__name|default:"Uncategorized" }}</td>
+                            <td class="px-4 py-2 text-right">{{ category.total_quantity }}</td>
+                            <td class="px-4 py-2 text-right">₦{{ category.total_revenue|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data for the sales chart
+    const dailySales = {{ daily_sales|safe }};
+    const dates = dailySales.map(sale => sale.timestamp__date);
+    const totals = dailySales.map(sale => sale.total);
+
+    // Create the sales chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Daily Sales (₦)',
+                data: totals,
+                borderColor: '#4F46E5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function exportData(format) {
+    // Implement export functionality
+    alert('Export functionality will be implemented soon!');
+}
+</script>
+{% endblock %} 

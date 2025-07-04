@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Product - StockFlow{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Product
+            </h1>
+            <p class="text-text/60">Fill in the details below to {% if form.instance.pk %}update{% else %}create{% endif %} a product.</p>
+        </div>
+
+        <!-- Form -->
+        {% include 'stock/partials/form.html' with form=form %}
+        <div class="mt-6 flex justify-end space-x-4">
+            <a href="{% url 'stock:product_list' %}" class="btn-secondary">Cancel</a>
+            <button type="submit" class="btn-primary">
+                {% if form.instance.pk %}Update{% else %}Create{% endif %} Product
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock content %} 

@@ -1,0 +1,42 @@
+{% comment %}
+Usage:
+{% include 'stock/partials/tabs.html' with tabs=tabs %}
+
+Where tabs is a list of dictionaries with:
+- id: unique identifier
+- name: display name
+- icon: optional heroicon name
+- active: boolean for initial active state
+{% endcomment %}
+
+<div x-data="{ activeTab: '{{ tabs.0.id }}' }" class="mb-6">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            {% for tab in tabs %}
+            <button
+                @click="activeTab = '{{ tab.id }}'"
+                :class="{ 'border-primary text-primary': activeTab === '{{ tab.id }}', 'border-transparent text-text/60 hover:text-text hover:border-gray-300': activeTab !== '{{ tab.id }}' }"
+                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2"
+                role="tab"
+                aria-selected="false">
+                {% if tab.icon %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {% include "stock/partials/icons/"|add:tab.icon|add:".html" %}
+                </svg>
+                {% endif %}
+                <span>{{ tab.name }}</span>
+            </button>
+            {% endfor %}
+        </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="mt-6">
+        {% for tab in tabs %}
+        <div x-show="activeTab === '{{ tab.id }}'" x-cloak>
+            {% block tab_content %}{% endblock %}
+        </div>
+        {% endfor %}
+    </div>
+</div> 

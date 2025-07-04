@@ -1,0 +1,69 @@
+{% comment %}
+Usage:
+{% include 'stock/partials/form.html' with form=form %}
+{% endcomment %}
+
+<form method="post" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    <div class="{% if field.field.widget.input_type == 'checkbox' %}flex items-center{% endif %}">
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-text/60 mb-1">
+            {{ field.label }}
+            {% if field.field.required %}
+            <span class="text-error">*</span>
+            {% endif %}
+        </label>
+        
+        {% if field.field.widget.input_type == 'checkbox' %}
+        <div class="mt-1">
+            <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %} class="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded transition duration-150 ease-in-out">
+        </div>
+        {% elif field.field.widget.input_type == 'textarea' %}
+        <div class="mt-1">
+            <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" rows="4" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if field.errors %}border-error ring-error{% endif %}" placeholder="{{ field.label }}">{{ field.value|default:'' }}</textarea>
+        </div>
+        {% elif field.field.widget.input_type == 'select' %}
+        <div class="mt-1">
+            <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text bg-white transition duration-200 {% if field.errors %}border-error ring-error{% endif %}">
+                {% for option in field.field.choices %}
+                <option value="{{ option.0 }}" {% if field.value == option.0 %}selected{% endif %}>{{ option.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% elif field.field.widget.input_type == 'file' %}
+        <div class="mt-1 flex items-center">
+            {% if field.value %}
+            <img src="{{ field.value.url }}" alt="{{ field.label }}" class="h-32 w-32 object-cover rounded-lg">
+            {% endif %}
+            <div class="ml-4">
+                <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition duration-200" />
+            </div>
+        </div>
+        {% else %}
+        <div class="mt-1">
+            <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default:'' }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-text placeholder-gray-400 transition duration-200 {% if field.errors %}border-error ring-error{% endif %}" placeholder="{{ field.label }}">
+        </div>
+        {% endif %}
+        
+        {% if field.help_text %}
+        <p class="mt-1 text-sm text-text/60">{{ field.help_text }}</p>
+        {% endif %}
+        
+        {% if field.errors %}
+        <p class="mt-1 text-sm text-error">{{ field.errors.0 }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    <div class="flex justify-end gap-4">
+        {% block form_actions %}
+        <a href="{% url 'stock:product_list' %}" class="px-4 py-2 text-sm font-medium text-text/60 hover:text-text bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+            Cancel
+        </a>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200">
+            Create Product
+        </button>
+        {% endblock %}
+    </div>
+</form> 

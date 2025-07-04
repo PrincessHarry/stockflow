@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Alerts - StockFlow{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-text">Stock Alerts</h1>
+            <p class="mt-2 text-text/60">
+                Products with quantities at or below their reorder level.
+            </p>
+        </div>
+
+        {% if low_stock_products %}
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 overflow-hidden">
+            <h2 class="text-lg font-semibold text-text mb-4">Products Running Low</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text/60 uppercase tracking-wider">Product Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text/60 uppercase tracking-wider">Category</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text/60 uppercase tracking-wider">Supplier</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text/60 uppercase tracking-wider">Current Stock</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text/60 uppercase tracking-wider">Reorder Level</th>
+                            <th scope="col" class="relative px-6 py-3">
+                                <span class="sr-only">Actions</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for product in low_stock_products %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
+                                {{ product.name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text/60">
+                                {{ product.category.name|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text/60">
+                                {{ product.supplier.name|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-error font-semibold">
+                                {{ product.quantity }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text/60">
+                                {{ product.reorder_level }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{% url 'stock:product_detail' product.id %}" class="text-primary hover:text-accent">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-success/10 mb-4">
+                <svg class="h-8 w-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <p class="text-lg text-success font-semibold">Great news! No stock alerts at the moment.</p>
+            <p class="mt-2 text-text/60">All products are currently above their reorder levels.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
