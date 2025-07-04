@@ -20,7 +20,7 @@ cryptography==45.0.3
 cssselect2==0.8.0
 defusedxml==0.7.1
 diff-match-patch==20241021
-Django==5.1.4
+Django==4.2.11
 django-allauth==0.61.1
 django-bootstrap5==23.4
 django-celery-beat==2.5.0
