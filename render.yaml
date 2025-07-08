@@ -14,4 +14,4 @@ services:
       - key: WEB_CONCURRENCY
         value: 4
       - key: ALLOWED_HOSTS
-        value: stockflow-w4e7.onrender.com 
+        value: stockflow-fjli.onrender.com 

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import logout
 from django.views.generic import CreateView, TemplateView, ListView, UpdateView, DeleteView, DetailView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -938,3 +939,7 @@ class SettingsView(StockLoginRequiredMixin, TemplateView):
         # For now, we'll just show a success message
         messages.success(request, 'Settings updated successfully.')
         return redirect('settings')
+
+def logout_view(request):
+    logout(request)
+    return redirect('stock:login')

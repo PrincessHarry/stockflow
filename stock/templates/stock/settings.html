@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - StockFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 bg-white p-8 rounded-lg shadow">
+    <h2 class="text-2xl font-bold mb-4">Settings</h2>
+    <p class="text-text/60 mb-6">Manage your account and application settings here. (This is a placeholder page. Add your settings options as needed.)</p>
+    <!-- Example setting -->
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Notification Preferences</label>
+        <select class="form-input w-full">
+            <option>Email Only</option>
+            <option>SMS Only</option>
+            <option>Email & SMS</option>
+            <option>None</option>
+        </select>
+    </div>
+    <button class="btn-primary w-full mt-4">Save Settings</button>
+</div>
+{% endblock %} 
