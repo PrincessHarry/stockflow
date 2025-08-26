@@ -17,6 +17,29 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['category'].queryset = Category.objects.filter(user=user)
+            self.fields['supplier'].queryset = Supplier.objects.filter(user=user)
+        self._current_user = user
+
+    def clean_sku(self):
+        sku = self.cleaned_data.get('sku')
+        user = getattr(self, '_current_user', None)
+        if not sku:
+            return sku
+        qs = Product.objects.filter(sku=sku)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        # If per-user uniqueness is intended, also filter by user
+        if user is not None:
+            qs = qs.filter(user=user)
+        if qs.exists():
+            raise forms.ValidationError('A product with this SKU already exists.')
+        return sku
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
@@ -25,6 +48,10 @@ class CategoryForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-input'}),
             'description': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
 
 class SupplierForm(forms.ModelForm):
     class Meta:
@@ -38,6 +65,10 @@ class SupplierForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3}),
         }
 
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
 class StockAdjustmentForm(forms.ModelForm):
     class Meta:
         model = StockHistory
@@ -50,8 +81,12 @@ class StockAdjustmentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        self.fields['product'].queryset = Product.objects.all().order_by('name')
+        if user:
+            self.fields['product'].queryset = Product.objects.filter(user=user).order_by('name')
+        else:
+            self.fields['product'].queryset = Product.objects.all().order_by('name')
         self.fields['action_type'].choices = [
             ('add', 'Add Stock'),
             ('remove', 'Remove Stock'),
@@ -72,10 +107,12 @@ class SaleForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        # Only show products with available stock
-        self.fields['product'].queryset = Product.objects.filter(quantity__gt=0).order_by('name')
-        # Make customer fields optional
+        if user:
+            self.fields['product'].queryset = Product.objects.filter(user=user, quantity__gt=0).order_by('name')
+        else:
+            self.fields['product'].queryset = Product.objects.filter(quantity__gt=0).order_by('name')
         self.fields['customer_name'].required = False
         self.fields['customer_email'].required = False
         self.fields['notes'].required = False

@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 class Category(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -14,9 +15,11 @@ class Category(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        user_display = self.user.username if self.user else 'N/A'
+        return f"{self.name} (User: {user_display})"
 
 class Supplier(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='suppliers', null=True, blank=True)
     name = models.CharField(max_length=200)
     contact_person = models.CharField(max_length=200)
     phone = models.CharField(max_length=20)
@@ -29,9 +32,11 @@ class Supplier(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        user_display = self.user.username if self.user else 'N/A'
+        return f"{self.name} (User: {user_display})"
 
 class Product(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     name = models.CharField(max_length=200)
     sku = models.CharField(max_length=50, unique=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
@@ -48,7 +53,8 @@ class Product(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.sku})"
+        user_display = self.user.username if self.user else 'N/A'
+        return f"{self.name} ({self.sku}) (User: {user_display})"
 
     @property
     def needs_reorder(self):
@@ -65,7 +71,7 @@ class StockHistory(models.Model):
     action_type = models.CharField(max_length=10, choices=ACTION_TYPES)
     quantity_changed = models.IntegerField()
     timestamp = models.DateTimeField(default=timezone.now)
-    staff = models.ForeignKey(User, on_delete=models.PROTECT)
+    staff = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True)
     reason = models.TextField(blank=True)
 
     class Meta:
@@ -76,10 +82,11 @@ class StockHistory(models.Model):
         return f"{self.action_type} - {self.product.name} ({self.quantity_changed})"
 
 class Sale(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sales', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity_sold = models.IntegerField(validators=[MinValueValidator(1)])
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    sold_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    sold_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sales_made', null=True, blank=True)
     customer_name = models.CharField(max_length=200, blank=True)
     customer_email = models.EmailField(blank=True)
     notes = models.TextField(blank=True)
@@ -89,7 +96,8 @@ class Sale(models.Model):
         ordering = ['-timestamp']
 
     def __str__(self):
-        return f"Sale of {self.product.name} ({self.quantity_sold})"
+        user_display = self.user.username if self.user else 'N/A'
+        return f"Sale of {self.product.name} ({self.quantity_sold}) (User: {user_display})"
 
     def save(self, *args, **kwargs):
         # Update product quantity when sale is made

@@ -69,41 +69,43 @@ class DashboardView(StockLoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_products'] = Product.objects.count()
-        context['total_categories'] = Category.objects.count()
-        context['total_sales'] = Sale.objects.count()
-        context['total_suppliers'] = Supplier.objects.count()
-        context['total_stock_adjustments'] = StockHistory.objects.count()
-        context['total_sales_value'] = Sale.objects.aggregate(
+        user = self.request.user
+        context['total_products'] = Product.objects.filter(user=user).count()
+        context['total_categories'] = Category.objects.filter(user=user).count()
+        context['total_sales'] = Sale.objects.filter(user=user).count()
+        context['total_suppliers'] = Supplier.objects.filter(user=user).count()
+        context['total_stock_adjustments'] = StockHistory.objects.filter(staff=user).count()
+        context['total_sales_value'] = Sale.objects.filter(user=user).aggregate(
             total=Sum('total_price')
         )['total'] or 0
-        context['total_stock_value'] = Product.objects.aggregate(
+        context['total_stock_value'] = Product.objects.filter(user=user).aggregate(
             total=Sum(F('quantity') * F('unit_price'))
         )['total'] or 0
-        context['total_stock_adjustments_value'] = StockHistory.objects.aggregate(
+        context['total_stock_adjustments_value'] = StockHistory.objects.filter(staff=user).aggregate(
             total=Sum('quantity_changed')
         )['total'] or 0
         
         # Calculate KPIs
-        total_stock_value = Product.objects.aggregate(
+        total_stock_value = Product.objects.filter(user=user).aggregate(
             total=Sum(F('quantity') * F('unit_price'))
         )['total'] or 0
-        sales_count = Sale.objects.count()
-        low_stock_count = Product.objects.filter(quantity__lte=F('reorder_level')).count()
+        sales_count = Sale.objects.filter(user=user).count()
+        low_stock_count = Product.objects.filter(user=user, quantity__lte=F('reorder_level')).count()
 
         # Get recent sales data for the chart
         last_30_days = timezone.now() - timedelta(days=30)
         daily_sales = Sale.objects.filter(
+            user=user,
             timestamp__gte=last_30_days
         ).values('timestamp__date').annotate(
             total=Sum('total_price')
         ).order_by('timestamp__date')
 
         # Get stock alerts
-        low_stock_products = Product.objects.filter(quantity__lte=F('reorder_level')).select_related('category', 'supplier')
+        low_stock_products = Product.objects.filter(user=user, quantity__lte=F('reorder_level')).select_related('category', 'supplier')
 
         # Get recent stock movements
-        recent_movements = StockHistory.objects.select_related(
+        recent_movements = StockHistory.objects.filter(staff=user).select_related(
             'product', 'staff'
         ).order_by('-timestamp')[:5]
 
@@ -124,7 +126,8 @@ class ProductListView(StockLoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('category', 'supplier')
+        user = self.request.user
+        queryset = super().get_queryset().filter(user=user).select_related('category', 'supplier')
         
         # Search by name or SKU
         search_query = self.request.GET.get('search', '')
@@ -174,8 +177,9 @@ class ProductListView(StockLoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
-        context['suppliers'] = Supplier.objects.all()
+        user = self.request.user
+        context['categories'] = Category.objects.filter(user=user)
+        context['suppliers'] = Supplier.objects.filter(user=user)
         
         # Add current filter values to context
         context['current_filters'] = {
@@ -196,7 +200,13 @@ class ProductCreateView(StockLoginRequiredMixin, CreateView):
     template_name = 'stock/product_form.html'
     success_url = reverse_lazy('stock:product_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Product created successfully.')
         return super().form_valid(form)
 
@@ -206,7 +216,13 @@ class ProductUpdateView(StockLoginRequiredMixin, UpdateView):
     template_name = 'stock/product_form.html'
     success_url = reverse_lazy('stock:product_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Product updated successfully.')
         return super().form_valid(form)
 
@@ -238,7 +254,8 @@ class CategoryListView(StockLoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        user = self.request.user
+        queryset = super().get_queryset().filter(user=user)
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(name__icontains=search_query)
@@ -250,7 +267,13 @@ class CategoryCreateView(StockLoginRequiredMixin, CreateView):
     template_name = 'stock/category_form.html'
     success_url = reverse_lazy('stock:category_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Category created successfully.')
         return super().form_valid(form)
 
@@ -260,7 +283,13 @@ class CategoryUpdateView(StockLoginRequiredMixin, UpdateView):
     template_name = 'stock/category_form.html'
     success_url = reverse_lazy('stock:category_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Category updated successfully.')
         return super().form_valid(form)
 
@@ -284,7 +313,8 @@ class SupplierListView(StockLoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        user = self.request.user
+        queryset = super().get_queryset().filter(user=user)
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(name__icontains=search_query)
@@ -296,7 +326,13 @@ class SupplierCreateView(StockLoginRequiredMixin, CreateView):
     template_name = 'stock/supplier_form.html'
     success_url = reverse_lazy('stock:supplier_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Supplier created successfully.')
         return super().form_valid(form)
 
@@ -306,7 +342,13 @@ class SupplierUpdateView(StockLoginRequiredMixin, UpdateView):
     template_name = 'stock/supplier_form.html'
     success_url = reverse_lazy('stock:supplier_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
+        form.instance.user = self.request.user
         messages.success(self.request, 'Supplier updated successfully.')
         return super().form_valid(form)
 
@@ -328,6 +370,11 @@ class StockAdjustmentView(StockLoginRequiredMixin, CreateView):
     form_class = StockAdjustmentForm
     template_name = 'stock/stock_adjustment.html'
     success_url = reverse_lazy('stock:stock_history')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         stock_history = form.save(commit=False)
@@ -367,7 +414,8 @@ class StockHistoryView(StockLoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('product', 'staff')
+        user = self.request.user
+        queryset = super().get_queryset().filter(staff=user).select_related('product', 'staff')
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(product__name__icontains=search_query)
@@ -388,48 +436,43 @@ class SaleCreateView(StockLoginRequiredMixin, CreateView):
     template_name = 'stock/sale_form.html'
     success_url = reverse_lazy('stock:sale_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
-        try:
-            sale = form.save(commit=False)
-            sale.sold_by = self.request.user
-            
-            # Get total price from form data
-            total_price = self.request.POST.get('total_price')
-            if total_price:
-                sale.total_price = float(total_price)
-            else:
-                sale.total_price = sale.product.unit_price * sale.quantity_sold
-            
-            # Check if there's enough stock
-            if sale.quantity_sold > sale.product.quantity:
-                messages.error(self.request, f'Not enough stock available. Only {sale.product.quantity} items left.')
-                return self.form_invalid(form)
-            
-            # Update product quantity
-            product = sale.product
-            product.quantity -= sale.quantity_sold
-            
-            # Save both the product and sale in a transaction
-            with transaction.atomic():
-                product.save()
-                sale.save()
-                
-                # Create stock history record with current timestamp
-                StockHistory.objects.create(
-                    product=product,
-                    action_type='remove',
-                    quantity_changed=sale.quantity_sold,
-                    staff=self.request.user,
-                    timestamp=timezone.now(),
-                    reason=f'Sold to {sale.customer_name}' if sale.customer_name else 'Sale recorded'
-                )
-            
-            messages.success(self.request, 'Sale recorded successfully.')
-            return super().form_valid(form)
-            
-        except Exception as e:
-            messages.error(self.request, f'Error recording sale: {str(e)}')
+        sale = form.save(commit=False)
+        sale.user = self.request.user
+        sale.sold_by = self.request.user
+        # Get total price from form data
+        total_price = self.request.POST.get('total_price')
+        if total_price:
+            sale.total_price = float(total_price)
+        else:
+            sale.total_price = sale.product.unit_price * sale.quantity_sold
+        # Check if there's enough stock
+        if sale.quantity_sold > sale.product.quantity:
+            messages.error(self.request, f'Not enough stock available. Only {sale.product.quantity} items left.')
             return self.form_invalid(form)
+        # Update product quantity
+        product = sale.product
+        product.quantity -= sale.quantity_sold
+        # Save both the product and sale in a transaction
+        with transaction.atomic():
+            product.save()
+            sale.save()
+            # Create stock history record with current timestamp
+            StockHistory.objects.create(
+                product=product,
+                action_type='remove',
+                quantity_changed=sale.quantity_sold,
+                staff=self.request.user,
+                timestamp=timezone.now(),
+                reason=f'Sold to {sale.customer_name}' if sale.customer_name else 'Sale recorded'
+            )
+        messages.success(self.request, 'Sale recorded successfully.')
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
@@ -442,7 +485,8 @@ class SaleListView(StockLoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('product', 'sold_by')
+        user = self.request.user
+        queryset = super().get_queryset().filter(user=user).select_related('product', 'sold_by')
         search_query = self.request.GET.get('search', '')
         if search_query:
             queryset = queryset.filter(
@@ -522,6 +566,7 @@ class ReportsView(StockLoginRequiredMixin, TemplateView):
         
         # Get sales data
         sales = Sale.objects.filter(
+            user=self.request.user,
             created_at__range=[start, end]
         ).select_related('product').order_by('created_at')
 
@@ -537,7 +582,10 @@ class ReportsView(StockLoginRequiredMixin, TemplateView):
 
     def generate_low_stock_report(self, format_type):
         # Get low stock products
-        products = Product.objects.filter(quantity__lte=F('reorder_level')).select_related('category', 'supplier')
+        products = Product.objects.filter(
+            user=self.request.user,
+            quantity__lte=F('reorder_level')
+        ).select_related('category', 'supplier')
         
         if format_type == 'csv':
             return self.generate_low_stock_csv(products)
@@ -546,7 +594,7 @@ class ReportsView(StockLoginRequiredMixin, TemplateView):
 
     def generate_inventory_report(self, format_type):
         # Get inventory value by category
-        inventory = Product.objects.values('category__name').annotate(
+        inventory = Product.objects.filter(user=self.request.user).values('category__name').annotate(
             total_products=Count('id'),
             total_quantity=Sum('quantity'),
             total_value=Sum(F('quantity') * F('unit_price'), output_field=DecimalField())
@@ -814,6 +862,7 @@ class StockAlertsView(StockLoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Product.objects.filter(
+            user=self.request.user,
             quantity__lte=F('reorder_level')
         ).select_related('category', 'supplier').order_by('quantity')
 
@@ -834,6 +883,7 @@ class SalesAnalyticsView(StockLoginRequiredMixin, TemplateView):
         
         # Get sales data for the period
         sales = Sale.objects.filter(
+            user=self.request.user,
             timestamp__range=[start_date, end_date]
         ).select_related('product')
         
